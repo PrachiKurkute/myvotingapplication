@@ -1,0 +1,10 @@
+<div id="content" style="width:60%; height:100%; float:left">
+	<center>{{ welcomeString }}</center><br>
+	<form action="/category" method="post">
+		Enter new category name: <input type="text" name="categoryName"><br><br>
+		<input type="submit" name="button" value="Add Category">
+	</form>
+</div>
+<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">
+	<center><a href="{{ signOutString }}">sign out</a></center>
+</div>

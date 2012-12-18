@@ -33,8 +33,7 @@ class MainHandler(webapp2.RequestHandler):
 			welcomeString = ('<p>Welcome, %s! </p>'% user.nickname())
 			signOutString = ('<a href="%s">sign out</a>'% users.create_logout_url("/"))
 			html = template.render('template/page_begin.html', {})
-			html = html + '<div id="content" style="width:60%; height:100%;' 
-			html = html + 'float:left; background-color:green">'
+			html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 			html = html + '<center>' + welcomeString + '</center><br>'
 			html = html + '</div>'
 			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
@@ -43,62 +42,77 @@ class MainHandler(webapp2.RequestHandler):
 			html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
-class Category(webapp2.RequestHandler):
+class CategoryPage(webapp2.RequestHandler):
     def get(self):
 		user = users.get_current_user()
-		welcomeString = ('<p>Welcome, %s! </p>'% user.nickname())
-		signOutString = ('<a href="%s">sign out</a>'% users.create_logout_url("/"))
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
 		html = template.render('template/page_begin.html', {})
-		html = html + '<div id="content" style="width:60%; height:100%;' 
-		html = html + 'float:left; background-color:green">'
-		html = html + '<center>' + welcomeString + '</center><br>'
-		html = html + '<form action="/category" method="post">'
-		html = html + '<input type="radio" name="categoryOption" value="listCategory">List Categories<br>'
-		html = html + '<input type="radio" name="categoryOption" value="addNewCategory">Add New Categories<br>'
-		html = html + '<input type="radio" name="categoryOption" value="editCategory">Edit Categories<br>'
-		html = html + '<input type="submit" name="button" value="Submit">'
-		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
-		html = html + '<center>' + signOutString + '</center>'
-		html = html + '</div>'
+		html = html + template.render('template/category_page.html', {'welcomeString': welcomeString,'signOutString': signOutString})
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
     def post(self):
 		if self.request.get('categoryOption') == "listCategory" :
-			self.listCategory("Prachi")
+			self.listCategory("Listing Categories")
 		if self.request.get('categoryOption') == "addNewCategory" :
-			html = html + 'This is add new category'
+			self.addNewCategory()
 		if self.request.get('categoryOption') == "editCategory" :
-			html = html + 'This is edit category'
+			self.editCategory("Listing Categories")
+		if self.request.get('button') == "Add Category" :
+			categoryName = self.request.get('categoryName')
+			self.addCategoryToDatastore(categoryName)
 		
     def listCategory(self,name):
 		html = 'This is listCategory function of ' + name
 		self.response.out.write(html)
-		return
 		
-    def addNewCategory(self,name):
-		html = 'This is listCategory function of ' + name
+    def addNewCategory(self):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		html = template.render('template/page_begin.html', {})
+		html = html + template.render('template/add_category_page.html', {'welcomeString': welcomeString,'signOutString': signOutString})
+		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
-		return
 		
     def editCategory(self,name):
 		html = 'This is listCategory function of ' + name
 		self.response.out.write(html)
 		return
+	
+    def addCategoryToDatastore(self, categoryName):
+		user = users.get_current_user()
+		userName = user.nickname()
+		k = userName + '_' + categoryName
+		category = Category(key_name=k,user_name=userName,category_name=categoryName)
+		category.put()
+		self.redirect("/category")
 		
-class Vote(webapp2.RequestHandler):
+class VotePage(webapp2.RequestHandler):
     def get(self):
 		html = 'This is get of Vote'
 		self.response.out.write(html)
 
-class Result(webapp2.RequestHandler):
+class ResultPage(webapp2.RequestHandler):
     def get(self):
 		html = 'This is get of Result'
 		self.response.out.write(html)
+		
+class Category(db.Model):
+	user_name = db.StringProperty()
+	category_name = db.StringProperty()
+		
+class Item(db.Model):
+	user_name = db.StringProperty()
+	category_name = db.StringProperty()
+	item_name = db.StringProperty()
+	wins = db.IntegerProperty()
+	loses = db.IntegerProperty()
+		
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-	('/category', Category),
-	('/vote', Vote),
-	('/result', Result)
+	('/category', CategoryPage),
+	('/vote', VotePage),
+	('/result', ResultPage)
 ], debug=True)
