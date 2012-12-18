@@ -24,6 +24,7 @@ from google.appengine.ext.webapp import template
 class MainHandler(webapp2.RequestHandler):
     def get(self):
 		user = users.get_current_user()
+		#c = Item.all().filter('user_name =','Prachi').filter('category_name =','ABC').filter('item_name =','PQS').get().delete()
 		if not user:
 			html = '<html><body>'
 			html = html + '<center><h1>Voting Website</h1></center>'
@@ -74,7 +75,12 @@ class CategoryPage(webapp2.RequestHandler):
 			self.editCategory()
 		if self.request.get('button') == "Add Category" :
 			categoryName = self.request.get('categoryName')
-			self.addCategoryToDatastore(categoryName)
+			user = users.get_current_user()
+			userName = user.nickname()
+			category = Category(user_name=userName,category_name=categoryName)
+			category.put()
+			self.redirect("/category")
+			#self.addCategoryToDatastore(categoryName)
 		if self.request.get('button') == "View Items" :
 			stg = self.request.get('info')
 			categoryName, userName = stg.split(" : ")
@@ -87,7 +93,9 @@ class CategoryPage(webapp2.RequestHandler):
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
 			itemName = self.request.get('addItemName')
-			self.addItemToDatastore(userName,categoryName,itemName)
+			item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
+			item.put()
+			self.redirect("/")
 		if self.request.get('button') == "Delete Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
@@ -119,7 +127,7 @@ class CategoryPage(webapp2.RequestHandler):
     def viewItems(self,user_name,category_name):
  		welcomeString = ('Welcome, %s!'% user_name)
 		signOutString = users.create_logout_url("/")
-		items = Categoryitem.all().filter('user_name =',user_name).filter('category_name =',category_name)
+		items = Item.all().filter('user_name =',user_name).filter('category_name =',category_name)
 		html = template.render('template/page_begin.html', {})
 		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 		html = html + '<center>'+ welcomeString +'</center><br>'
@@ -144,12 +152,12 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 	
-    def addCategoryToDatastore(self, categoryName):
-		user = users.get_current_user()
-		userName = user.nickname()
-		category = Category(user_name=userName,category_name=categoryName)
-		category.put()
-		self.redirect("/category")
+    #def addCategoryToDatastore(self, categoryName):
+	#	user = users.get_current_user()
+	#	userName = user.nickname()
+	#	category = Category(user_name=userName,category_name=categoryName)
+	#	category.put()
+	#	self.redirect("/category")
 		
     def editCategory(self):
 		user = users.get_current_user()
@@ -175,7 +183,7 @@ class CategoryPage(webapp2.RequestHandler):
     def editGivenCategory(self,userName,categoryName):
 		welcomeString = ('Welcome, %s!'% userName)
 		signOutString = users.create_logout_url("/")
-		items = Categoryitem.all().filter('user_name =',userName).filter('category_name =',categoryName)
+		items = Item.all().filter('user_name =',userName).filter('category_name =',categoryName)
 		html = template.render('template/page_begin.html', {})
 		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 		html = html + '<center>'+ welcomeString +'</center><br>'
@@ -196,10 +204,10 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
-    def addItemToDatastore(userName,categoryName,itemName):
-		item = Categoryitem(user_name=userName,category_name=categoryName,item_name=itemName,wins=0,loses=0)
-		item.put()
-		self.redirect("/category")
+    #def addItemToDatastore(userName,categoryName,itemName):
+	#	item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
+	#	item.put()
+	#	self.redirect("/category")
 		
     def deleteItemFromDatastore(userName,categoryName,itemName):
 		itm = Categryitem.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',itemName).get().delete()
@@ -221,16 +229,13 @@ class Category(db.Model):
 		
 class User(db.Model):
 	user_name = db.StringProperty()
-		
-class Categoryitem(db.Model):
+	
+class Item(db.Model):
 	user_name = db.StringProperty()
 	category_name = db.StringProperty()
 	item_name = db.StringProperty()
-	wins = db.IntegerProperty()
-	loses = db.IntegerProperty()
-		
-class Book(db.Model):
-	name = db.StringProperty()
+	wins = db.StringProperty()
+	loses = db.StringProperty()
 		
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
