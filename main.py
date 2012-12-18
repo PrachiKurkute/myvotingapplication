@@ -23,22 +23,69 @@ from google.appengine.ext.webapp import template
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-		html = template.render('template/page_begin.html', {})
-		html = html + '<div id="content" style="width:60%; height:100%;' 
-		html = html + 'float:left; background-color:green">'
-		html = html + '<center>Your Content</center><br>'
-		html = html + '<center>My Content</center><br>'
-		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
-		html = html + 'Your sidebar'
-		html = html + '</div>'
-		html = html + template.render('template/page_end.html', {})
+		user = users.get_current_user()
+		if not user:
+			html = '<html><body>'
+			html = html + '<center><h1>Voting Website</h1></center>'
+			html = html + ('<center><a href=\"%s\">Sign in or register</a></center>'% (users.create_login_url("/")))
+			html = html + '</body></html>'
+		else:
+			welcomeString = ('<p>Welcome, %s! </p>'% user.nickname())
+			signOutString = ('<a href="%s">sign out</a>'% users.create_logout_url("/"))
+			html = template.render('template/page_begin.html', {})
+			html = html + '<div id="content" style="width:60%; height:100%;' 
+			html = html + 'float:left; background-color:green">'
+			html = html + '<center>' + welcomeString + '</center><br>'
+			html = html + '</div>'
+			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+			html = html + '<center>' + signOutString + '</center>'
+			html = html + '</div>'
+			html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
 class Category(webapp2.RequestHandler):
     def get(self):
-		html = 'This is get of Category'
+		user = users.get_current_user()
+		welcomeString = ('<p>Welcome, %s! </p>'% user.nickname())
+		signOutString = ('<a href="%s">sign out</a>'% users.create_logout_url("/"))
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%;' 
+		html = html + 'float:left; background-color:green">'
+		html = html + '<center>' + welcomeString + '</center><br>'
+		html = html + '<form action="/category" method="post">'
+		html = html + '<input type="radio" name="categoryOption" value="listCategory">List Categories<br>'
+		html = html + '<input type="radio" name="categoryOption" value="addNewCategory">Add New Categories<br>'
+		html = html + '<input type="radio" name="categoryOption" value="editCategory">Edit Categories<br>'
+		html = html + '<input type="submit" name="button" value="Submit">'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center>' + signOutString + '</center>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
+		
+    def post(self):
+		if self.request.get('categoryOption') == "listCategory" :
+			self.listCategory("Prachi")
+		if self.request.get('categoryOption') == "addNewCategory" :
+			html = html + 'This is add new category'
+		if self.request.get('categoryOption') == "editCategory" :
+			html = html + 'This is edit category'
+		
+    def listCategory(self,name):
+		html = 'This is listCategory function of ' + name
+		self.response.out.write(html)
+		return
+		
+    def addNewCategory(self,name):
+		html = 'This is listCategory function of ' + name
+		self.response.out.write(html)
+		return
+		
+    def editCategory(self,name):
+		html = 'This is listCategory function of ' + name
+		self.response.out.write(html)
+		return
 		
 class Vote(webapp2.RequestHandler):
     def get(self):
