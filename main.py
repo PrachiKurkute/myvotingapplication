@@ -75,12 +75,7 @@ class CategoryPage(webapp2.RequestHandler):
 			self.editCategory()
 		if self.request.get('button') == "Add Category" :
 			categoryName = self.request.get('categoryName')
-			user = users.get_current_user()
-			userName = user.nickname()
-			category = Category(user_name=userName,category_name=categoryName)
-			category.put()
-			self.redirect("/category")
-			#self.addCategoryToDatastore(categoryName)
+			self.addCategoryToDatastore(categoryName)
 		if self.request.get('button') == "View Items" :
 			stg = self.request.get('info')
 			categoryName, userName = stg.split(" : ")
@@ -89,14 +84,14 @@ class CategoryPage(webapp2.RequestHandler):
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
 			self.editGivenCategory(userName,categoryName)
-		if self.request.get('button') == "Add Item" :
+		if self.request.get('editbutton') == "Add Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
 			itemName = self.request.get('addItemName')
 			item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
 			item.put()
-			self.redirect("/")
-		if self.request.get('button') == "Delete Item" :
+			self.redirect("/category")
+		if self.request.get('editbutton') == "Delete Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
 			itemName = self.request.get('deleteItemName')
@@ -152,12 +147,12 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 	
-    #def addCategoryToDatastore(self, categoryName):
-	#	user = users.get_current_user()
-	#	userName = user.nickname()
-	#	category = Category(user_name=userName,category_name=categoryName)
-	#	category.put()
-	#	self.redirect("/category")
+    def addCategoryToDatastore(self, categoryName):
+		user = users.get_current_user()
+		userName = user.nickname()
+		category = Category(user_name=userName,category_name=categoryName)
+		category.put()
+		self.redirect("/category")
 		
     def editCategory(self):
 		user = users.get_current_user()
@@ -190,11 +185,11 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<h4>Category : ' + categoryName + ' of ' + userName + '</h4><br>'
 		for i in items:
 			html = html + i.item_name + '<br>'
-		html = html + '<br><br><form action="/category" method="get">'
+		html = html + '<br><br><form action="/category" method="post">'
 		html = html + 'Enter item to be added<input type="text" name="addItemName">'
-		html = html + '<input type="submit" name="button" value="Add Item">'
+		html = html + '<input type="submit" name="editbutton" value="Add Item"><br><br>'
 		html = html + 'Enter item to be deleted<input type="text" name="deleteItemName">'
-		html = html + '<input type="submit" name="button" value="Delete Item">'
+		html = html + '<input type="submit" name="editbutton" value="Delete Item">'
 		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
 		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
 		html = html + '</div>'
@@ -204,14 +199,14 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
-    #def addItemToDatastore(userName,categoryName,itemName):
-	#	item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
-	#	item.put()
-	#	self.redirect("/category")
+    def addItemToDatastore(userName,categoryName,itemName):
+		item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
+		item.put()
+		self.redirect("/category")
 		
     def deleteItemFromDatastore(userName,categoryName,itemName):
-		itm = Categryitem.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',itemName).get().delete()
-		self.redirect('/category')	
+		itm = Item.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',itemName).get().delete()
+		self.redirect('/category')
 		
 class VotePage(webapp2.RequestHandler):
     def get(self):
