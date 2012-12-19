@@ -39,7 +39,7 @@ class MainHandler(webapp2.RequestHandler):
 			html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 			html = html + '<center>' + welcomeString + '</center><br>'
 			html = html + '</div>'
-			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 			html = html + '<center>' + signOutString + '</center><br><br>'
 			html = html + '<form action="/search" method="post">'
 			html = html + '<input type="text" name="searchItem">'
@@ -213,7 +213,7 @@ class CategoryPage(webapp2.RequestHandler):
 					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
 		html = html + '<input type="submit" name="button" value="View Items"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -235,7 +235,7 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<br><br><form action="/category" method="get">'
 		html = html + '<input type="submit" name="button" value="Back"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -287,7 +287,7 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<input type="hidden" name="userName" value="' + user.nickname() + '">'
 		html = html + '<input type="submit" name="button" value="Edit Category"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -317,7 +317,7 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
 		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -359,7 +359,7 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<input type="hidden" name="userName" value="' + user.nickname() + '">'
 		html = html + '<input type="submit" name="button" value="Select Category"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -384,7 +384,7 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
 		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -408,7 +408,7 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
 		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -449,7 +449,7 @@ class VotePage(webapp2.RequestHandler):
 						html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + ' with no expiration date<br>'
 		html = html + '<input type="submit" name="button" value="Select for Voting"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -536,7 +536,7 @@ class VotePage(webapp2.RequestHandler):
 			html = html + '<input type="hidden" name="userName" value=' + userName + '>'
 			html = html + '<input type="hidden" name="categoryName" value=' + categoryName + '></form>'
 			html = html + '</div>'
-			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 			html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 			html = html + '<form action="/search" method="post">'
 			html = html + '<input type="text" name="searchItem">'
@@ -575,7 +575,7 @@ class ResultPage(webapp2.RequestHandler):
 					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
 		html = html + '<input type="submit" name="button" value="See Results"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -624,6 +624,12 @@ class ResultPage(webapp2.RequestHandler):
 			else:
 				html = html + '<td>None</td><tr>'
 		hrml = html + '</table>'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
@@ -675,10 +681,10 @@ class ExportCategory(webapp2.RequestHandler):
 		for u in usrs:
 			for c in categories:
 				if u.user_name == c.user_name :
-					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
+					html = html + '<input type="radio" name="info" value="' + str(c.category_name) + ' : ' + str(c.user_name) + '">' + str(c.category_name) + ' by ' + str(c.user_name) + '<br>'
 		html = html + '<input type="submit" name="button" value="Select to export"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -693,14 +699,17 @@ class ExportCategory(webapp2.RequestHandler):
 			categoryName, userName = stg.split(" : ")
 			self.exportToXML(userName,categoryName)
 
-    def exportToXML(self,userName,categoryName):
+    def exportToXML(self,userName,category_name):
 		self.response.headers['Content-Type'] = 'text/xml'
-		file_name = categoryName.replace(' ', '_')
+		file_name = category_name.replace(' ', '_')
 		self.response.headers['Content-Disposition'] = "attachment; filename=" + str(file_name) + ".xml"
-		items = Item.all().filter('category_name =',categoryName).filter('user_name =',userName)
+		
+		items = Item.all().filter('category_name =',category_name).filter('user_name =',userName)
+		
 		root = Element('CATEGORY')
 		categoryName = SubElement(root, 'NAME')
 		categoryName.text = categoryName
+		
 		for item in items:
 			itemTag = SubElement(root, 'ITEM')
 			itemNameTag = SubElement(itemTag, 'NAME')
@@ -721,7 +730,7 @@ class ImportCategory(webapp2.RequestHandler):
 		html = html + '<input type="hidden" name="task_name" value="import_category"> <br> <br>'
 		html = html + '<input type="submit" name="button" value="Import"></form>'
 		html = html + '</div>'
-		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:grey">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
@@ -750,7 +759,7 @@ class ImportCategory(webapp2.RequestHandler):
 			# parse xml file		
 			root = fromstring(x)
 			categoryName = root.findall('NAME')
-			categoryName = categoryName[0].text.strip()
+			categoryName = str(categoryName[0].text).strip()
 			
 			# check whether the category with the same name is already present
 			if self.categoryPresent(categoryName) == False:
@@ -763,13 +772,14 @@ class ImportCategory(webapp2.RequestHandler):
 					if child.tag == "ITEM":
 						childName = child.findall('NAME')[0].text.strip()
 						self.createNewItem(userName,categoryName,childName)
-			else:		
+			else:
 				msg = 'Conflict: Category ' + categoryName + ' cannot be imported.'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': '','method': 'get'})
 				self.response.out.write(html)
 				return
 		html = '<html><body>'
 		html = html + '<center><h1>File successfully imported</h1></center>'
+		html = html + 'category name is ' + categoryName
 		html = html + '<br><br><form action="/" method="get">'
 		html = html + '<center><input type="submit" name="button" value="Back"></form></center>'
 		html = html + '</body></html>'
