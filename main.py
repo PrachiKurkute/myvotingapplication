@@ -230,9 +230,8 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 		html = html + '<center>'+ welcomeString +'</center><br>'
 		html = html + '<h4>Category : ' + category_name + ' of ' + user_name + '</h4><br>'
-		if not items:
-			for i in items:
-				html = html + i.item_name + '<br>'
+		for i in items:
+			html = html + i.item_name + '<br>'
 		html = html + '<br><br><form action="/category" method="get">'
 		html = html + '<input type="submit" name="button" value="Back"></form>'
 		html = html + '</div>'
