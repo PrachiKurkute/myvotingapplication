@@ -21,6 +21,7 @@ import random
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
+from xml.etree.ElementTree import Element, SubElement, tostring, XML, fromstring
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -166,7 +167,7 @@ class CategoryPage(webapp2.RequestHandler):
 			for c in categories:
 				if u.user_name == c.user_name :
 					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
-		html = html + '<input type="submit" name="button" value="View Items">'
+		html = html + '<input type="submit" name="button" value="View Items"></form>'
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
@@ -188,7 +189,7 @@ class CategoryPage(webapp2.RequestHandler):
 		for i in items:
 			html = html + i.item_name + '<br>'
 		html = html + '<br><br><form action="/category" method="get">'
-		html = html + '<input type="submit" name="button" value="Back">'
+		html = html + '<input type="submit" name="button" value="Back"></form>'
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
@@ -240,7 +241,7 @@ class CategoryPage(webapp2.RequestHandler):
 		for c in categories:
 				html = html + '<input type="radio" name="categoryName" value="' + c.category_name + '">' + c.category_name + '<br>'
 		html = html + '<input type="hidden" name="userName" value="' + user.nickname() + '">'
-		html = html + '<input type="submit" name="button" value="Edit Category">'
+		html = html + '<input type="submit" name="button" value="Edit Category"></form>'
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
@@ -311,7 +312,7 @@ class VotePage(webapp2.RequestHandler):
 			for c in categories:
 				if u.user_name == c.user_name :
 					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
-		html = html + '<input type="submit" name="button" value="Select for Voting">'
+		html = html + '<input type="submit" name="button" value="Select for Voting"></form>'
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
@@ -413,7 +414,7 @@ class ResultPage(webapp2.RequestHandler):
 			for c in categories:
 				if u.user_name == c.user_name :
 					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
-		html = html + '<input type="submit" name="button" value="See Results">'
+		html = html + '<input type="submit" name="button" value="See Results"></form>'
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
@@ -488,6 +489,58 @@ class SearchPage(webapp2.RequestHandler):
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
+class ExportCategory(webapp2.RequestHandler):
+    def get(self):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		usrs = db.GqlQuery("SELECT * FROM User")
+		categories = db.GqlQuery("SELECT * FROM Category")
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		
+		html = html + '<form action="/exportcategory" method="post">'
+		for u in usrs:
+			for c in categories:
+				if u.user_name == c.user_name :
+					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
+		html = html + '<input type="submit" name="button" value="Select to export"></form>'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
+		
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+    def post(self):
+		if self.request.get('button') == "Select to export" :
+			stg = self.request.get('info')
+			categoryName, userName = stg.split(" : ")
+		
+class ImportCategory(webapp2.RequestHandler):
+    def get(self):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		
+		
+		
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+    def post(self):
+		html = 'post of import'
+		self.response.out.write(html)
+		
 class Category(db.Model):
 	user_name = db.StringProperty()
 	category_name = db.StringProperty()
@@ -508,5 +561,7 @@ app = webapp2.WSGIApplication([
 	('/category', CategoryPage),
 	('/vote', VotePage),
 	('/result', ResultPage),
-	('/search', SearchPage)
+	('/search', SearchPage),
+	('/exportcategory', ExportCategory),
+	('/importcategory', ImportCategory)
 ], debug=True)
