@@ -1,14 +1,11 @@
 <div id="content" style="width:60%; height:100%; float:left">
 	<center>{{ welcomeString }}</center><br>
-	<form action="/category" method="post">
+	<form action="/vote" method="post">
 		<input type="radio" name="categoryOption" value="listCategory">List Categories<br>
 		<input type="radio" name="categoryOption" value="addNewCategory">Add New Categories<br>
 		<input type="radio" name="categoryOption" value="editCategory">Edit Categories<br>
 		<input type="submit" name="button" value="Submit">
 </div>
 <div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">
-	<center><a href="{{ signOutString }}">sign out</a></center><br>
-	<form action="/search" method="post">
-	<input type="text" name="searchItem">
-	<input type="submit" name="button" value="Search"></form>
+	<center><a href="{{ signOutString }}">sign out</a></center>
 </div>

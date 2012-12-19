@@ -17,6 +17,7 @@
 import webapp2
 import datetime
 import os
+import random
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -24,7 +25,6 @@ from google.appengine.ext.webapp import template
 class MainHandler(webapp2.RequestHandler):
     def get(self):
 		user = users.get_current_user()
-		#c = Item.all().filter('user_name =','Prachi').filter('category_name =','ABC').filter('item_name =','PQS').get().delete()
 		if not user:
 			html = '<html><body>'
 			html = html + '<center><h1>Voting Website</h1></center>'
@@ -39,7 +39,10 @@ class MainHandler(webapp2.RequestHandler):
 			html = html + '<center>' + welcomeString + '</center><br>'
 			html = html + '</div>'
 			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
-			html = html + '<center>' + signOutString + '</center>'
+			html = html + '<center>' + signOutString + '</center><br><br>'
+			html = html + '<form action="/search" method="post">'
+			html = html + '<input type="text" name="searchItem">'
+			html = html + '<input type="submit" name="button" value="Search"></form>'
 			html = html + '</div>'
 			html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
@@ -67,35 +70,87 @@ class CategoryPage(webapp2.RequestHandler):
 		self.response.out.write(html)
 		
     def post(self):
-		if self.request.get('categoryOption') == "listCategory" :
-			self.listCategory()
-		if self.request.get('categoryOption') == "addNewCategory" :
-			self.addNewCategory()
-		if self.request.get('categoryOption') == "editCategory" :
-			self.editCategory()
+		if self.request.get('button') == "Submit" :
+			if self.request.get('categoryOption'):
+				if self.request.get('categoryOption') == "listCategory" :
+					self.listCategory()
+				if self.request.get('categoryOption') == "addNewCategory" :
+					self.addNewCategory()
+				if self.request.get('categoryOption') == "editCategory" :
+					self.editCategory()
+			else:
+				msg = 'Select one option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 		if self.request.get('button') == "Add Category" :
-			categoryName = self.request.get('categoryName')
-			self.addCategoryToDatastore(categoryName)
+			if self.request.get('categoryName'):
+				categoryName = self.request.get('categoryName')
+				flag = self.categoryExists(categoryName)
+				if flag == True:
+					msg = 'Given Category already Exists'
+					html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+					self.response.out.write(html)
+				if flag == False:
+					self.addCategoryToDatastore(categoryName)
+			else:
+				msg = 'Empty Category Name'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 		if self.request.get('button') == "View Items" :
-			stg = self.request.get('info')
-			categoryName, userName = stg.split(" : ")
-			self.viewItems(userName,categoryName)
+			if self.request.get('info'):
+				stg = self.request.get('info')
+				categoryName, userName = stg.split(" : ")
+				self.viewItems(userName,categoryName)
+			else:
+				msg = 'Select One Option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 		if self.request.get('button') == "Edit Category" :
-			categoryName = self.request.get('categoryName')
-			userName = self.request.get('userName')
-			self.editGivenCategory(userName,categoryName)
+			if self.request.get('categoryName'):
+				categoryName = self.request.get('categoryName')
+				userName = self.request.get('userName')
+				self.editGivenCategory(userName,categoryName)
+			else:
+				msg = 'Select One Option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 		if self.request.get('editbutton') == "Add Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
-			itemName = self.request.get('addItemName')
-			item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
-			item.put()
-			self.redirect("/category")
+			if self.request.get('addItemName'):
+				itemName = self.request.get('addItemName')
+				flag = self.itemExists(userName,categoryName,itemName)
+				if flag == True:
+					msg = 'Given item already exists in  category ' + categoryName
+					html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+					self.response.out.write(html)
+				if flag == False:
+					self.addItemToDatastore(userName,categoryName,itemName)
+			else:
+				msg = 'Empty Item Name'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 		if self.request.get('editbutton') == "Delete Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
-			itemName = self.request.get('deleteItemName')
-			self.deleteItemFromDatastore(userName,categoryName,itemName)
+			
+			if self.request.get('deleteItemName'):
+				itemName = self.request.get('deleteItemName')
+				flag = self.itemExists(userName,categoryName,itemName)
+				if flag == False:
+					msg = 'Given item does not exist in  category ' + categoryName
+					html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+					self.response.out.write(html)
+				if flag == True:
+					self.deleteItemFromDatastore(userName,categoryName,itemName)
+			else:
+				msg = 'Empty Item Name'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
+		
+    def error(self):
+		html = '<html><body>Non Option is selected</body></html>'
+		self.response.out.write(html)
 		
     def listCategory(self):
 		user = users.get_current_user()
@@ -115,6 +170,9 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
@@ -134,6 +192,9 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
@@ -144,6 +205,9 @@ class CategoryPage(webapp2.RequestHandler):
 		signOutString = users.create_logout_url("/")
 		html = template.render('template/page_begin.html', {})
 		html = html + template.render('template/add_category_page.html', {'welcomeString': welcomeString,'signOutString': signOutString})
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 	
@@ -153,6 +217,15 @@ class CategoryPage(webapp2.RequestHandler):
 		category = Category(user_name=userName,category_name=categoryName)
 		category.put()
 		self.redirect("/category")
+		
+    def categoryExists(self,categoryName):
+		user = users.get_current_user()
+		userName = user.nickname()
+		category = Category.all().filter('user_name =',userName)
+		for c in category:
+			if c.category_name == categoryName:
+				return True
+		return False
 		
     def editCategory(self):
 		user = users.get_current_user()
@@ -171,6 +244,9 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
@@ -195,27 +271,221 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
 		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
-    def addItemToDatastore(userName,categoryName,itemName):
-		item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins='0',loses='0')
+    def addItemToDatastore(self,userName,categoryName,itemName):
+		item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins=0,loses=0)
 		item.put()
 		self.redirect("/category")
 		
-    def deleteItemFromDatastore(userName,categoryName,itemName):
+    def itemExists(self,userName,categoryName,itemName):
+		user = users.get_current_user()
+		userName = user.nickname()
+		items = Item.all().filter('user_name =',userName).filter('category_name =',categoryName)
+		for i in items:
+			if i.item_name == itemName:
+				return True
+		return False
+		
+    def deleteItemFromDatastore(self,userName,categoryName,itemName):
 		itm = Item.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',itemName).get().delete()
 		self.redirect('/category')
 		
 class VotePage(webapp2.RequestHandler):
     def get(self):
-		html = 'This is get of Vote'
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		usrs = db.GqlQuery("SELECT * FROM User")
+		categories = db.GqlQuery("SELECT * FROM Category")
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		html = html + '<form action="/vote" method="post">'
+		for u in usrs:
+			for c in categories:
+				if u.user_name == c.user_name :
+					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
+		html = html + '<input type="submit" name="button" value="Select for Voting">'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
-
+		
+    def post(self):
+		if self.request.get('button') == 'Select for Voting':		
+			if self.request.get('info'):
+				stg = self.request.get('info')
+				categoryName, userName = stg.split(" : ")
+				self.handleVoting(userName,categoryName)
+			else:
+				msg = 'Select one option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'vote','method': 'get'})
+				self.response.out.write(html)
+		if self.request.get('button') == 'Vote':
+			if self.request.get('itemoption'):
+				itemName = self.request.get('itemoption')
+				userName = self.request.get('userName')
+				categoryName = self.request.get('categoryName')
+				stg = self.request.get('info')
+				firstItem, secondItem = stg.split(" : ")
+				if firstItem == itemName:
+					winItem = firstItem
+					looseItem = secondItem
+				else:
+					winItem = secondItem
+					looseItem = firstItem
+				self.registerVote(userName,categoryName,winItem,looseItem)
+			else:
+				msg = 'Select one option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'vote','method': 'get'})
+				self.response.out.write(html)
+			
+    def handleVoting(self,userName,categoryName):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		usrs = db.GqlQuery("SELECT * FROM User")
+		categories = db.GqlQuery("SELECT * FROM Category")
+		items = Item.all().filter('user_name =',userName).filter('category_name =',categoryName)
+		if( items.count() >= 2):
+			randomNumber_1 = random.randint(0,items.count() - 1 )
+			randomNumber_2 = randomNumber_1
+			while(randomNumber_1 == randomNumber_2):
+				randomNumber_2 = random.randint(0,items.count() - 1 )
+			itemOne = items[randomNumber_1]
+			itemTwo = items[randomNumber_2]
+			html = template.render('template/page_begin.html', {})
+			html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+			html = html + '<center>'+ welcomeString +'</center><br>'
+			html = html + '<form action="/vote" method="post">'
+			html = html + '<input type="radio" name="itemoption" value=' + itemOne.item_name + '>' + itemOne.item_name + '<br>'
+			html = html + '<input type="radio" name="itemoption" value=' + itemTwo.item_name + '>' + itemTwo.item_name + '<br>'
+			html = html + '<input type="submit" name="button" value="Vote">'
+			html = html + '<input type="hidden" name="info" value="' + itemOne.item_name + ' : ' + itemTwo.item_name + '">'
+			html = html + '<input type="hidden" name="userName" value=' + userName + '>'
+			html = html + '<input type="hidden" name="categoryName" value=' + categoryName + '></form>'
+			html = html + '</div>'
+			html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+			html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+			html = html + '<form action="/search" method="post">'
+			html = html + '<input type="text" name="searchItem">'
+			html = html + '<input type="submit" name="button" value="Search"></form>'
+			html = html + '</div>'
+			html = html + template.render('template/page_end.html', {})
+			self.response.out.write(html)
+		else:
+			msg = 'Not enough items in category ' + categoryName + ' of user ' + userName + '. Choose another category'
+			html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'vote','method': 'get'})
+			self.response.out.write(html)
+			
+    def registerVote(self,userName,categoryName,winItem,looseItem):
+		item1 = Item.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',winItem).get()
+		item1.wins = item1.wins + 1
+		item1.put()
+		item2 = Item.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',looseItem).get()
+		item2.loses = item2.loses + 1
+		item2.put()
+		self.redirect("/vote")
+			
 class ResultPage(webapp2.RequestHandler):
     def get(self):
-		html = 'This is get of Result'
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		usrs = db.GqlQuery("SELECT * FROM User")
+		categories = db.GqlQuery("SELECT * FROM Category")
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		html = html + '<form action="/result" method="post">'
+		for u in usrs:
+			for c in categories:
+				if u.user_name == c.user_name :
+					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
+		html = html + '<input type="submit" name="button" value="See Results">'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+    def post(self):
+		if self.request.get('button') == 'See Results':		
+			if self.request.get('info'):
+				stg = self.request.get('info')
+				categoryName, userName = stg.split(" : ")
+				self.handleResults(userName,categoryName)
+			else:
+				msg = 'Select one option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'result','method': 'get'})
+				self.response.out.write(html)
+		
+    def handleResults(self,userName,categoryName):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		usrs = db.GqlQuery("SELECT * FROM User")
+		categories = db.GqlQuery("SELECT * FROM Category")
+		items = Item.all().filter('user_name =',userName).filter('category_name =',categoryName)
+		html = html + '<br><br><form action="/result" method="get">'
+		html = html + '<input type="submit" name="button" value="Back"></form>'
+		html = html + 'Category: ' + categoryName + '<br><br>'
+		html = html + '<table><tr><td>Item Name</td><td>Wins</td><td>Losses</td></tr>'
+		for i in items:
+			html = html + '<tr><td>' + i.item_name + '</td><td>' + str(i.wins) + '</td><td>' + str(i.loses) + '</td><tr>'
+		hrml = html + '</table>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+class SearchPage(webapp2.RequestHandler):
+    def get(self):
+		html = 'This is get of SearchPage'
+		self.response.out.write(html)
+		
+    def post(self):
+		if self.request.get('button') == "Search" :
+			if self.request.get('searchItem'):
+				searchItem = self.request.get('searchItem')
+				self.handleSearch(searchItem)
+			else:
+				msg = 'Empty search'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': '','method': 'get'})
+				self.response.out.write(html)
+				
+    def handleSearch(self,searchItem):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		html = html + 'Search item : ' + searchItem + ' found in : <br>'
+		items = Item.all()
+		for i in items:
+			itemName = i.item_name
+			if itemName.find(searchItem) != -1:
+				html = html + ' item : ' + i.item_name + ' in category : ' + i.category_name + '<br>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
 class Category(db.Model):
@@ -229,12 +499,14 @@ class Item(db.Model):
 	user_name = db.StringProperty()
 	category_name = db.StringProperty()
 	item_name = db.StringProperty()
-	wins = db.StringProperty()
-	loses = db.StringProperty()
+	comment = db.StringProperty()
+	wins = db.IntegerProperty()
+	loses = db.IntegerProperty()
 		
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
 	('/category', CategoryPage),
 	('/vote', VotePage),
-	('/result', ResultPage)
+	('/result', ResultPage),
+	('/search', SearchPage)
 ], debug=True)
