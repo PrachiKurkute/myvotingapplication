@@ -79,6 +79,8 @@ class CategoryPage(webapp2.RequestHandler):
 					self.addNewCategory()
 				if self.request.get('categoryOption') == "editCategory" :
 					self.editCategory()
+				if self.request.get('categoryOption') == "addComment" :
+					self.commentHandle()
 			else:
 				msg = 'Select one option'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
@@ -115,18 +117,49 @@ class CategoryPage(webapp2.RequestHandler):
 				msg = 'Select One Option'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
 				self.response.out.write(html)
+		if self.request.get('button') == "Select Category" :
+			if self.request.get('categoryName'):
+				categoryName = self.request.get('categoryName')
+				userName = self.request.get('userName')
+				self.addCommentHandle(userName,categoryName)
+			else:
+				msg = 'Select One Option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
+		if self.request.get('button') == "Select Item" :
+			if self.request.get('itemName'):
+				itemName = self.request.get('itemName')
+				userName = self.request.get('userName')
+				categoryName = self.request.get('categoryName')
+				self.addCommentPage(userName,categoryName,itemName)
+			else:
+				msg = 'Select One Option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
+		if self.request.get('button') == "Add Comment" :
+			if self.request.get('commentName'):
+				commentName = self.request.get('commentName')
+				userName = self.request.get('userName')
+				categoryName = self.request.get('categoryName')
+				itemName = self.request.get('itemName')
+				self.addCommentToItem(userName,categoryName,itemName,commentName)
+			else:
+				msg = 'Select One Option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 		if self.request.get('editbutton') == "Add Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
 			if self.request.get('addItemName'):
 				itemName = self.request.get('addItemName')
+				commentName = self.request.get('addComment')
 				flag = self.itemExists(userName,categoryName,itemName)
 				if flag == True:
 					msg = 'Given item already exists in  category ' + categoryName
 					html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
 					self.response.out.write(html)
 				if flag == False:
-					self.addItemToDatastore(userName,categoryName,itemName)
+					self.addItemToDatastore(userName,categoryName,itemName,commentName)
 			else:
 				msg = 'Empty Item Name'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
@@ -134,7 +167,6 @@ class CategoryPage(webapp2.RequestHandler):
 		if self.request.get('editbutton') == "Delete Item" :
 			categoryName = self.request.get('categoryName')
 			userName = self.request.get('userName')
-			
 			if self.request.get('deleteItemName'):
 				itemName = self.request.get('deleteItemName')
 				flag = self.itemExists(userName,categoryName,itemName)
@@ -148,7 +180,19 @@ class CategoryPage(webapp2.RequestHandler):
 				msg = 'Empty Item Name'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
 				self.response.out.write(html)
-		
+		if self.request.get('editbutton') == "Set" :
+			categoryName = self.request.get('categoryName')
+			userName = self.request.get('userName')
+			if self.request.get('expirationDate'):
+				date = self.request.get('expirationDate')
+				year, month, day = date.split("-")
+				expirationDate = year + '-' + month + '-' + day
+				self.setExpirationDate(userName,categoryName,expirationDate)
+			else:
+				msg = 'Empty Item Name'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
+	
     def error(self):
 		html = '<html><body>Non Option is selected</body></html>'
 		self.response.out.write(html)
@@ -186,8 +230,9 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 		html = html + '<center>'+ welcomeString +'</center><br>'
 		html = html + '<h4>Category : ' + category_name + ' of ' + user_name + '</h4><br>'
-		for i in items:
-			html = html + i.item_name + '<br>'
+		if not items:
+			for i in items:
+				html = html + i.item_name + '<br>'
 		html = html + '<br><br><form action="/category" method="get">'
 		html = html + '<input type="submit" name="button" value="Back"></form>'
 		html = html + '</div>'
@@ -263,10 +308,13 @@ class CategoryPage(webapp2.RequestHandler):
 		for i in items:
 			html = html + i.item_name + '<br>'
 		html = html + '<br><br><form action="/category" method="post">'
-		html = html + 'Enter item to be added<input type="text" name="addItemName">'
+		html = html + 'Enter item to be added: <input type="text" name="addItemName">'
+		html = html + 'Enter comment for am item: <input type="text" name="addComment">'
 		html = html + '<input type="submit" name="editbutton" value="Add Item"><br><br>'
 		html = html + 'Enter item to be deleted<input type="text" name="deleteItemName">'
-		html = html + '<input type="submit" name="editbutton" value="Delete Item">'
+		html = html + '<input type="submit" name="editbutton" value="Delete Item"><br><br>'
+		html = html + 'Expiration Date: <input type="date" name="expirationDate">'
+		html = html + '<input type="submit" name="editbutton" value="Set"><br><br>'
 		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
 		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
 		html = html + '</div>'
@@ -279,8 +327,8 @@ class CategoryPage(webapp2.RequestHandler):
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
-    def addItemToDatastore(self,userName,categoryName,itemName):
-		item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins=0,loses=0)
+    def addItemToDatastore(self,userName,categoryName,itemName,commentName):
+		item = Item(user_name=userName,category_name=categoryName,item_name=itemName,comment=commentName,wins=0,loses=0)
 		item.put()
 		self.redirect("/category")
 		
@@ -297,6 +345,91 @@ class CategoryPage(webapp2.RequestHandler):
 		itm = Item.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',itemName).get().delete()
 		self.redirect('/category')
 		
+    def commentHandle(self):
+		user = users.get_current_user()
+		welcomeString = ('Welcome, %s!'% user.nickname())
+		signOutString = users.create_logout_url("/")
+		categories = Category.all().filter('user_name =',user.nickname())
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		html = html + '<h3>Categories created by you : </h3>'
+		html = html + '<form action="/category" method="post">'
+		for c in categories:
+				html = html + '<input type="radio" name="categoryName" value="' + c.category_name + '">' + c.category_name + '<br>'
+		html = html + '<input type="hidden" name="userName" value="' + user.nickname() + '">'
+		html = html + '<input type="submit" name="button" value="Select Category"></form>'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+    def addCommentHandle(self,userName,categoryName):
+		welcomeString = ('Welcome, %s!'% userName)
+		signOutString = users.create_logout_url("/")
+		items = Item.all().filter('user_name =',userName).filter('category_name =',categoryName)
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		html = html + '<h4>Category : ' + categoryName + ' of ' + userName + '</h4><br>'
+		html = html + '<br><br><form action="/category" method="post">'
+		for i in items:
+			if not i.comment:
+				html = html + '<input type="radio" name="itemName" value="' + i.item_name + '">' + i.item_name + '<br>'
+		html = html + '<input type="submit" name="button" value="Select Item"><br><br>'
+		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
+		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+    def addCommentPage(self,userName,categoryName,itemName):
+		welcomeString = ('Welcome, %s!'% userName)
+		signOutString = users.create_logout_url("/")
+		items = Item.all().filter('user_name =',userName).filter('category_name =',categoryName)
+		html = template.render('template/page_begin.html', {})
+		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
+		html = html + '<center>'+ welcomeString +'</center><br>'
+		html = html + '<h4>Add comment for item : ' + itemName + ' of category : ' + categoryName + '</h4><br>'
+		html = html + '<br><br><form action="/category" method="post">'
+		html = html + '<input type="text" name="commentName"<br>'
+		html = html + '<input type="submit" name="button" value="Add Comment"><br><br>'
+		html = html + '<input type="hidden" name="itemName" value="' + itemName + '">'
+		html = html + '<input type="hidden" name="userName" value="' + userName + '">'
+		html = html + '<input type="hidden" name="categoryName" value="' + categoryName + '"></form>'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
+		html = html + '</div>'
+		html = html + template.render('template/page_end.html', {})
+		self.response.out.write(html)
+		
+    def addCommentToItem(self,userName,categoryName,itemName,commentName):
+		item = Item.all().filter('user_name =',userName).filter('category_name =',categoryName).filter('item_name =',itemName).get()
+		item.comment = commentName
+		item.put()
+		self.redirect("/category")
+		
+    def setExpirationDate(self,userName,categoryName,expirationDate):
+		category = Category.all().filter('user_name =',userName).filter('category_name =',categoryName).get()
+		category.expiration_date = expirationDate
+		category.put()
+		self.redirect("/category")
+		
 class VotePage(webapp2.RequestHandler):
     def get(self):
 		user = users.get_current_user()
@@ -311,7 +444,10 @@ class VotePage(webapp2.RequestHandler):
 		for u in usrs:
 			for c in categories:
 				if u.user_name == c.user_name :
-					html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + '<br>'
+					if c.expiration_date:
+						html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + ' with expiration date : ' + c.expiration_date + '<br>'
+					else:
+						html = html + '<input type="radio" name="info" value="' + c.category_name + ' : ' + c.user_name + '">' + c.category_name + ' by ' + c.user_name + ' with no expiration date<br>'
 		html = html + '<input type="submit" name="button" value="Select for Voting"></form>'
 		html = html + '</div>'
 		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
@@ -328,7 +464,13 @@ class VotePage(webapp2.RequestHandler):
 			if self.request.get('info'):
 				stg = self.request.get('info')
 				categoryName, userName = stg.split(" : ")
-				self.handleVoting(userName,categoryName)
+				flag = self.canVote(userName,categoryName)
+				if flag == True:
+					self.handleVoting(userName,categoryName)
+				if flag == False:
+					msg = 'Category is expired'
+					html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'vote','method': 'get'})
+					self.response.out.write(html)
 			else:
 				msg = 'Select one option'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'vote','method': 'get'})
@@ -351,6 +493,24 @@ class VotePage(webapp2.RequestHandler):
 				msg = 'Select one option'
 				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'vote','method': 'get'})
 				self.response.out.write(html)
+		
+    def canVote(self,userName,categoryName):
+		category = Category.all().filter('user_name =',userName).filter('category_name =',categoryName).get()
+		now = datetime.datetime.now()
+		current_year = int(now.year)
+		current_month = int(now.month)
+		current_dayNo = int(now.day)
+		if not category.expiration_date:
+			return True
+		else:			
+			expiration_year, expiration_month, expiration_dayNo = str(category.expiration_date).split("-")
+			expiration_year = int(expiration_year)
+			expiration_month = int(expiration_month)
+			expiration_dayNo = int(expiration_dayNo)
+			if expiration_year >= current_year and expiration_month >= current_month and expiration_dayNo >= current_dayNo:
+				return True
+			else:
+				return False
 			
     def handleVoting(self,userName,categoryName):
 		user = users.get_current_user()
@@ -449,9 +609,21 @@ class ResultPage(webapp2.RequestHandler):
 		html = html + '<br><br><form action="/result" method="get">'
 		html = html + '<input type="submit" name="button" value="Back"></form>'
 		html = html + 'Category: ' + categoryName + '<br><br>'
-		html = html + '<table><tr><td>Item Name</td><td>Wins</td><td>Losses</td></tr>'
+		html = html + '<table><tr><td>Item Name</td><td>Wins</td><td>Losses</td><td>Percentage</td><td>Comment</td></tr>'
 		for i in items:
-			html = html + '<tr><td>' + i.item_name + '</td><td>' + str(i.wins) + '</td><td>' + str(i.loses) + '</td><tr>'
+			sum = i.wins + i.loses
+			if sum == 0:
+				percent = 0.00
+			else:
+				percent = float(i.wins) / (sum) * 100
+			html = html + '<tr><td>' + i.item_name
+			html = html + '</td><td>' + str(i.wins)
+			html = html + '</td><td>' + str(i.loses)
+			html = html + '</td><td>' + str(percent) + '</td>'
+			if i.comment:
+				html = html + '<td>' + i.comment + '</td><tr>'
+			else:
+				html = html + '<td>None</td><tr>'
 		hrml = html + '</table>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
@@ -621,6 +793,7 @@ class ImportCategory(webapp2.RequestHandler):
 class Category(db.Model):
 	user_name = db.StringProperty()
 	category_name = db.StringProperty()
+	expiration_date = db.StringProperty()
 		
 class User(db.Model):
 	user_name = db.StringProperty()
