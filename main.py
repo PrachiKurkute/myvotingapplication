@@ -695,9 +695,14 @@ class ExportCategory(webapp2.RequestHandler):
 		
     def post(self):
 		if self.request.get('button') == "Select to export" :
-			stg = self.request.get('info')
-			categoryName, userName = stg.split(" : ")
-			self.exportToXML(userName,categoryName)
+			if self.request.get('info'):
+				stg = self.request.get('info')
+				categoryName, userName = stg.split(" : ")
+				self.exportToXML(userName,categoryName)
+			else:
+				msg = 'Select one option'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': 'category','method': 'get'})
+				self.response.out.write(html)
 
     def exportToXML(self,userName,category_name):
 		self.response.headers['Content-Type'] = 'text/xml'
