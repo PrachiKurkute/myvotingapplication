@@ -499,7 +499,7 @@ class ExportCategory(webapp2.RequestHandler):
 		html = template.render('template/page_begin.html', {})
 		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 		html = html + '<center>'+ welcomeString +'</center><br>'
-		
+		html = html + 'Categories<br><br>'
 		html = html + '<form action="/exportcategory" method="post">'
 		for u in usrs:
 			for c in categories:
@@ -512,7 +512,6 @@ class ExportCategory(webapp2.RequestHandler):
 		html = html + '<form action="/search" method="post">'
 		html = html + '<input type="text" name="searchItem">'
 		html = html + '<input type="submit" name="button" value="Search"></form>'
-		
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
@@ -521,6 +520,21 @@ class ExportCategory(webapp2.RequestHandler):
 		if self.request.get('button') == "Select to export" :
 			stg = self.request.get('info')
 			categoryName, userName = stg.split(" : ")
+			self.exportToXML(userName,categoryName)
+
+    def exportToXML(self,userName,categoryName):
+		self.response.headers['Content-Type'] = 'text/xml'
+		file_name = categoryName.replace(' ', '_')
+		self.response.headers['Content-Disposition'] = "attachment; filename=" + str(file_name) + ".xml"
+		items = Item.all().filter('category_name =',categoryName).filter('user_name =',userName)
+		root = Element('CATEGORY')
+		categoryName = SubElement(root, 'NAME')
+		categoryName.text = categoryName
+		for item in items:
+			itemTag = SubElement(root, 'ITEM')
+			itemNameTag = SubElement(itemTag, 'NAME')
+			itemNameTag.text = item.item_name
+		self.response.out.write(tostring(root))	
 		
 class ImportCategory(webapp2.RequestHandler):
     def get(self):
@@ -530,16 +544,79 @@ class ImportCategory(webapp2.RequestHandler):
 		html = template.render('template/page_begin.html', {})
 		html = html + '<div id="content" style="width:60%; height:100%; float:left">'
 		html = html + '<center>'+ welcomeString +'</center><br>'
-		
-		
-		
+		html = html + 'Upload the category file <br><br>'
+		html = html + '<form method="post" action="/importcategory" enctype="multipart/form-data">'		
+		html = html + '<input type="file" name="imported_file">'
+		html = html + '<input type="hidden" name="task_name" value="import_category"> <br> <br>'
+		html = html + '<input type="submit" name="button" value="Import"></form>'
+		html = html + '</div>'
+		html = html + '<div id="sidebar" style="width:20%; height:100%; float:right; background-color:yellow">'
+		html = html + '<center><a href="'+ signOutString +'">sign out</a></center>'
+		html = html + '<form action="/search" method="post">'
+		html = html + '<input type="text" name="searchItem">'
+		html = html + '<input type="submit" name="button" value="Search"></form>'
 		html = html + '</div>'
 		html = html + template.render('template/page_end.html', {})
 		self.response.out.write(html)
 		
     def post(self):
-		html = 'post of import'
+		if self.request.get('button') == "Import" :
+			user = users.get_current_user()
+			userName = user.nickname()
+			category_file = self.request.get('imported_file')
+			self.importCategory(userName,category_file)
+
+    def importCategory(self,userName,category_file):
+		if category_file == "":
+			msg = 'Error: No file uploaded or blank file'
+			html = template.render('template/error_page.html', {'error_msg': msg,'destination': '','method': 'get'})
+			self.response.out.write(html)
+			return
+		else:
+			x = self.request.POST.multi['imported_file'].file.read()
+			x = x.replace('\n', '')
+			
+			# parse xml file		
+			root = fromstring(x)
+			categoryName = root.findall('NAME')
+			categoryName = categoryName[0].text.strip()
+			
+			# check whether the category with the same name is already present
+			if self.categoryPresent(categoryName) == False:
+				# create a new category with new name
+				category_new = Category(user_name=userName,category_name=categoryName)
+				category_new.put()
+
+				# add items in the newly created category
+				for child in root:
+					if child.tag == "ITEM":
+						childName = child.findall('NAME')[0].text.strip()
+						self.createNewItem(userName,categoryName,childName)
+			else:		
+				msg = 'Conflict: Category ' + categoryName + ' cannot be imported.'
+				html = template.render('template/error_page.html', {'error_msg': msg,'destination': '','method': 'get'})
+				self.response.out.write(html)
+				return
+		html = '<html><body>'
+		html = html + '<center><h1>File successfully imported</h1></center>'
+		html = html + '<br><br><form action="/" method="get">'
+		html = html + '<center><input type="submit" name="button" value="Back"></form></center>'
+		html = html + '</body></html>'
 		self.response.out.write(html)
+	
+    def categoryPresent(self,categoryName):
+		user = users.get_current_user()
+		userName = user.nickname()
+		category = Category.all().filter('user_name =',userName)
+		for c in category:
+			if c.category_name == categoryName:
+				return True
+		return False
+		
+    def createNewItem(self,userName,categoryName,itemName):
+		item = Item(user_name=userName,category_name=categoryName,item_name=itemName,wins=0,loses=0)
+		item.put()
+		return
 		
 class Category(db.Model):
 	user_name = db.StringProperty()
